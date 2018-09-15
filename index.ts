@@ -4,9 +4,10 @@ const io = require('./io.ts')
 
 module.exports = () => {
   const args = process.argv.slice(2)
-  io.fileContents(args[0])
+  const fileName = args[0]
+  io.fileContents(fileName)
     .then(parsing.parse)
-    .then(printing.print)
+    .then(sourceCode => printing.print(sourceCode, fileName))
     .catch(e => {
       console.log(e)
     })

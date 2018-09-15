@@ -1,10 +1,13 @@
-function printComponent(component, filename) {
-  return `
-import { ${component.name} } from './${filename}'
-
-const defaultProps = {
-    
+function printDefaultProps(component) {
+  return component ? JSON.stringify(component.extends.types[0]) : '{}'
 }
+
+function printComponent(component, filename) {
+  return `import { ${component.name} } from './${filename}'
+
+const defaultProps = 
+  ${printDefaultProps(component)}  
+
 
 const newComponent = (props) => shallow(
     <Printing
@@ -23,20 +26,20 @@ describe('<${component.name} />', () => {
  `
 }
 
-const isComponent = obj =>
-  obj.extends &&
-  obj.extends.some(name => ['Component', 'React.Component'].includes(name))
+const isComponent = classObj =>
+  classObj.extends &&
+  ['Component', 'React.Component'].includes(classObj.extends.name)
 
 const classType = obj => (isComponent(obj) ? 'component' : 'class')
 
-function print(parsedObjects) {
+function print(parsedObjects, fileName = 'placeholder') {
   parsedObjects.forEach(obj => {
-    // console.log('obj', obj)
+    console.log(JSON.stringify(obj))
     const type = classType(obj)
 
     switch (type) {
       case 'component':
-        const result = printComponent(obj, 'sample')
+        const result = printComponent(obj, fileName)
         console.log(result)
         break
       default:
