@@ -20,69 +20,70 @@ function populateNames() {
   }
   return syntaxKind
 }
-
 populateNames()
 
-function classType(obj) {
-  if (
-    obj.extends &&
-    obj.extends.some(name => ['Component', 'React.Component'].includes(name))
-  ) {
-    return 'component'
-  } else {
-    return 'class'
+const nodeKind = node => syntaxKind[node.kind]
+const getName = node => node.name.escapedText
+
+function debugNode(node) {
+  console.log(nodeKind(node), node)
+}
+
+function parentClassName(node) {
+  const flatten = arr => arr.reduce((acc, val) => acc.concat(val), [])
+
+  if (node.heritageClauses) {
+    return flatten(parseNodes(node.heritageClauses))
   }
 }
 
 function parseClass(node) {
-  const parsed = {
-    name: node.name.escapedText,
-    extends: parseParentClass(node),
+  return {
+    name: getName(node),
+    extends: parentClassName(node),
     members: parseNodes(node.members),
   }
-
-  parsed['type'] = classType(parsed)
-  return parsed
 }
 
 function parseHeritageClause(node) {
   return parseNodes(node.types)
 }
 
-function parseParentClass(node) {
-  const flatten = arr => arr.reduce((acc, val) => acc.concat(val), [])
+const expressionName = expression => expression.getFullText(tsSourceFile).trim()
 
-  if (node.heritageClauses) {
-    return flatten(parseNodes(node.heritageClauses))
-  }
-  console.log('No Heritage Clauses =========')
+function parseExpression(node) {
+  return expressionName(node.expression)
 }
 
-function getName(node) {}
-
 function parseExpressionWithTypes(node) {
-  console.log('Expression Wtih Types')
+  const expression = {}
 
-  if (node.types) {
-    return parseNodes(node.types)
+  if (node.typeArguments) {
+    expression['types'] = parseNodes(node.typeArguments)
   }
 
   if (node.expression) {
-    return node.expression.getFullText(tsSourceFile).trim()
+    expression['name'] = expressionName(node.expression)
   }
-  console.log('NoTYPES')
+  return expression
 }
 
-function parseExpression(node) {
-  return node.expression.getFullText(tsSourceFile)
+function parseTypeLiteral(node) {
+  return Object.assign({}, ...parseNodes(node.members))
+}
+
+function parsePropertySignature(node) {
+  return {
+    [getName(node)]: parseNode(node.type),
+  }
 }
 
 function parseMethod(node) {
-  return node.name.escapedText
+  return getName(node)
 }
 
 function parseNode(node) {
-  switch (syntaxKind[node.kind]) {
+  switch (nodeKind(node)) {
     case 'ClassDeclaration':
       return parseClass(node)
     case 'HeritageClause':
@@ -93,7 +94,34 @@ function parseNode(node) {
       return parseExpression(node)
     case 'MethodDeclaration':
       return parseMethod(node)
+    case 'PropertySignature':
+      return parsePropertySignature(node)
+    case 'TypeLiteral':
+      return parseTypeLiteral(node)
+    case 'ArrayType':
+      return `Array of ${parseNode(node.elementType)}`
+    case 'FunctionType':
+      return 'function'
+    case 'TupleType':
+      return `Tuple of ${parseNodes(node.elementTypes).join(', ')}`
+    case 'AnyKeyword':
+      return 'any'
+    case 'BooleanKeyword':
+      return 'boolean'
+    case 'NullKeyword':
+      return 'null'
+    case 'NumberKeyword':
+      return 'number'
+    case 'StringKeyword':
+      return 'string'
+    case 'UndefinedKeyword':
+      return 'undefined'
+    case 'VoidKeyword':
+      return 'void'
 
+    case 'ImportDeclaration':
+      // return getName(node.importClause)
+      return null
     default:
       console.log('\n')
       console.log('PRINTING DEFAULT')
@@ -107,7 +135,8 @@ const parseNodes = nodes => nodes.map(parseNode)
 
 const parse = sourceCode => {
   tsSourceFile = makeSourceFile(sourceCode, __filename)
-  return Promise.resolve(parseNodes(tsSourceFile.statements))
+  const parsed = parseNodes(tsSourceFile.statements).filter(n => n)
+  return Promise.resolve(parsed)
 }
 
 module.exports = { parse }

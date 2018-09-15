@@ -23,11 +23,18 @@ describe('<${component.name} />', () => {
  `
 }
 
+const isComponent = obj =>
+  obj.extends &&
+  obj.extends.some(name => ['Component', 'React.Component'].includes(name))
+
+const classType = obj => (isComponent(obj) ? 'component' : 'class')
+
 function print(parsedObjects) {
   parsedObjects.forEach(obj => {
-    console.log(obj.type)
+    // console.log('obj', obj)
+    const type = classType(obj)
 
-    switch (obj.type) {
+    switch (type) {
       case 'component':
         const result = printComponent(obj, 'sample')
         console.log(result)
