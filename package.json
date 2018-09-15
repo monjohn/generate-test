@@ -14,6 +14,9 @@
   ],
   "author": "Monte Johnston",
   "license": "ISC",
+  "bin": {
+    "generate-test": "bin/generate-test"
+  },
   "dependencies": {
     "typescript": "^3.0.3"
   },

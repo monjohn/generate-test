@@ -1,8 +1,10 @@
 const ts = require('typescript')
 
 let tsSourceFile
-function makeSourceFile(sourceCode) {
-  return ts.createSourceFile(__filename, sourceCode, ts.ScriptTarget.Latest)
+
+function makeSourceFile(sourceCode, filename) {
+  filename = filename || __filename
+  return ts.createSourceFile(filename, sourceCode, ts.ScriptTarget.Latest)
 }
 
 const syntaxKind = {}
@@ -21,14 +23,26 @@ function populateNames() {
 
 populateNames()
 
-function parseClass(node) {
-  return {
-    class: {
-      name: node.name.escapedText,
-      extends: parseParentClass(node),
-      members: parseNodes(node.members),
-    },
+function classType(obj) {
+  if (
+    obj.extends &&
+    obj.extends.some(name => ['Component', 'React.Component'].includes(name))
+  ) {
+    return 'component'
+  } else {
+    return 'class'
   }
+}
+
+function parseClass(node) {
+  const parsed = {
+    name: node.name.escapedText,
+    extends: parseParentClass(node),
+    members: parseNodes(node.members),
+  }
+
+  parsed['type'] = classType(parsed)
+  return parsed
 }
 
 function parseHeritageClause(node) {
@@ -36,8 +50,10 @@ function parseHeritageClause(node) {
 }
 
 function parseParentClass(node) {
+  const flatten = arr => arr.reduce((acc, val) => acc.concat(val), [])
+
   if (node.heritageClauses) {
-    return parseNodes(node.heritageClauses)
+    return flatten(parseNodes(node.heritageClauses))
   }
   console.log('No Heritage Clauses =========')
 }
@@ -48,9 +64,7 @@ function parseExpressionWithTypes(node) {
   console.log('Expression Wtih Types')
 
   if (node.types) {
-    console.log('Types')
-
-    return node.types && parseNodes(node.types)
+    return parseNodes(node.types)
   }
 
   if (node.expression) {
@@ -92,8 +106,8 @@ function parseNode(node) {
 const parseNodes = nodes => nodes.map(parseNode)
 
 const parse = sourceCode => {
-  tsSourceFile = makeSourceFile(sourceCode)
-  return parseNodes(tsSourceFile.statements)
+  tsSourceFile = makeSourceFile(sourceCode, __filename)
+  return Promise.resolve(parseNodes(tsSourceFile.statements))
 }
 
 module.exports = { parse }
