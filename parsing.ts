@@ -29,24 +29,22 @@ function debugNode(node) {
   console.log(nodeKind(node), node)
 }
 
-function parentClassName(node) {
-  const flatten = arr => arr.reduce((acc, val) => acc.concat(val), [])
-
+function parentClass(node) {
   if (node.heritageClauses) {
-    return flatten(parseNodes(node.heritageClauses))
+    return parseNode(node.heritageClauses[0])
   }
 }
 
 function parseClass(node) {
   return {
     name: getName(node),
-    extends: parentClassName(node),
+    extends: parentClass(node),
     members: parseNodes(node.members),
   }
 }
 
 function parseHeritageClause(node) {
-  return parseNodes(node.types)
+  return parseNode(node.types[0])
 }
 
 const expressionName = expression => expression.getFullText(tsSourceFile).trim()
