@@ -18,6 +18,7 @@
     "generate-test": "bin/generate-test"
   },
   "dependencies": {
+    "lodash": "^4.17.11",
     "typescript": "^3.0.3"
   },
   "devDependencies": {

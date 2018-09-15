@@ -1,28 +1,26 @@
 const ts = require('typescript')
+const _ = require('lodash')
 
 let tsSourceFile
+const syntaxKind = populateNames()
 
 function makeSourceFile(sourceCode, filename) {
   filename = filename || __filename
   return ts.createSourceFile(filename, sourceCode, ts.ScriptTarget.Latest)
 }
 
-const syntaxKind = {}
 function populateNames() {
   // workarounds issue described at https://github.com/Microsoft/TypeScript/issues/18062
-  for (const name of Object.keys(ts.SyntaxKind).filter(x =>
-    isNaN(parseInt(x))
-  )) {
-    const value = ts.SyntaxKind[name]
-    if (!syntaxKind[value]) {
-      syntaxKind[value] = name
-    }
-  }
-  return syntaxKind
+  return Object.keys(ts.SyntaxKind)
+    .filter(x => isNaN(parseInt(x)))
+    .reduce((acc, name) => {
+      const value = ts.SyntaxKind[name]
+      return !acc[value] ? _.set(acc, value, name) : acc
+    }, {})
 }
-populateNames()
 
 const nodeKind = node => syntaxKind[node.kind]
+
 const getName = node => node.name.escapedText
 
 function debugNode(node) {
