@@ -1,13 +1,9 @@
 import React, { Component } from 'react'
 
-// type Props = { name: string }
+// type Name = 'First' | 'Last'
+type Props = { name: string }
 
-class View extends React.Component<{
-  func: () => void
-  name: string
-  count: number
-  isFunny: boolean
-}> {
+class View extends React.Component<Props> {
   render() {
     return <div>{this.props.name}</div>
   }

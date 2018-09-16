@@ -59,13 +59,24 @@ function parseExpressionWithTypes(node) {
   }
 
   if (node.expression) {
-    expression['name'] = expressionName(node.expression)
+    expression['expressionName'] = expressionName(node.expression)
   }
   return expression
 }
 
+function parseTypeAliasDeclaration(node) {
+  return [
+    'declaration',
+    { nameOfType: getName(node), type: parseNode(node.type) },
+  ]
+}
+
 function parseTypeLiteral(node) {
   return Object.assign({}, ...parseNodes(node.members))
+}
+
+function parseTypeReference(node) {
+  return ['reference', node.typeName.escapedText]
 }
 
 function parsePropertySignature(node) {
@@ -74,9 +85,7 @@ function parsePropertySignature(node) {
   }
 }
 
-function parseMethod(node) {
-  return getName(node)
-}
+const parseMethod = node => getName(node)
 
 function parseNode(node) {
   switch (nodeKind(node)) {
@@ -92,8 +101,12 @@ function parseNode(node) {
       return parseMethod(node)
     case 'PropertySignature':
       return parsePropertySignature(node)
+    case 'TypeAliasDeclaration':
+      return parseTypeAliasDeclaration(node)
     case 'TypeLiteral':
       return parseTypeLiteral(node)
+    case 'TypeReference':
+      return parseTypeReference(node)
     case 'ArrayType':
       return `Array of ${parseNode(node.elementType)}`
     case 'FunctionType':

@@ -1,13 +1,15 @@
-import { View } from '././data/data.tsx'
+import { View } from './'
 
-const defaultProps = {
-  func: undefined,
-  name: 'example',
-  count: 87,
-  isFunny: true,
-}
+const defaultProps = 
+  { name: 'example' }  
 
-const newComponent = props => shallow(<Printing {...defaultProps} {...props} />)
+
+const newComponent = (props) => shallow(
+    <Printing
+        {...defaultProps}
+        {...props}
+    />
+)
 
 const component = newComponent()
 describe('<View />', () => {
@@ -15,3 +17,5 @@ describe('<View />', () => {
     expect(component).toMatchSnapshot()
   })
 })
+
+ 
