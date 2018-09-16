@@ -8,6 +8,7 @@ module.exports = () => {
   io.fileContents(fileName)
     .then(parsing.parse)
     .then(sourceCode => printing.print(sourceCode, fileName))
+    .then(testCode => io.writeToFile(testCode, fileName, 'utf8'))
     .catch(e => {
       console.log(e)
     })

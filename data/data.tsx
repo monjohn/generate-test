@@ -4,10 +4,9 @@ import React, { Component } from 'react'
 
 class View extends React.Component<{
   func: () => void
-  myobject: { a: string }
   name: string
-  numbers: number[]
-  tuple: [string, number]
+  count: number
+  isFunny: boolean
 }> {
   render() {
     return <div>{this.props.name}</div>
