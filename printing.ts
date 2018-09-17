@@ -1,5 +1,11 @@
 const util = require('util')
 
+// Returns if a value is an object
+const isObject = value =>
+  value && typeof value === 'object' && value.constructor === Object
+
+const isArray = value => Array.isArray(value)
+
 const sampleData = {
   string: 'example',
   number: 87,
@@ -10,14 +16,18 @@ function typeToData(types) {
   Object.keys(types).forEach(key => {
     const type = types[key]
 
-    types[key] = sampleData[type]
+    if (isArray(type)) {
+      types[key] = type[1]
+    } else {
+      types[key] = sampleData[type]
+    }
   })
   return types
 }
 
 const mapTypes = parsedObjects =>
   parsedObjects.reduce((acc, obj) => {
-    if (Array.isArray(obj)) {
+    if (isArray(obj)) {
       const [kind, typeInfo] = obj
       if (kind === 'declaration') {
         const { nameOfType, type } = typeInfo
@@ -28,16 +38,22 @@ const mapTypes = parsedObjects =>
   }, {})
 
 function resolveReference(type, typeMap) {
-  if (Array.isArray(type)) {
+  if (isObject(type)) {
+    Object.entries(type).forEach(([key, value]) => {
+      type[key] = resolveReference(value, typeMap)
+    })
+    return type
+  }
+
+  if (isArray(type)) {
     const [metaData, typeData] = type
 
     if (metaData === 'reference') {
       const resolvedType = typeMap[typeData]
-      return resolvedType
-    } else {
-      return type
+      return resolveReference(resolvedType, typeMap)
     }
   }
+  return type
 }
 
 function resolveTypes(parsedObjects) {
@@ -69,6 +85,7 @@ const classType = obj => (isComponent(obj) ? 'component' : 'class')
 
 // PRINT
 function print(parsedObjects, fileName = 'placeholder') {
+  console.log(parsedObjects)
   const objectsToPrint = resolveTypes(parsedObjects)
 
   const printed = objectsToPrint.map(obj => {
@@ -77,7 +94,7 @@ function print(parsedObjects, fileName = 'placeholder') {
     switch (type) {
       case 'component':
         const result = printComponent(obj, fileName)
-        // console.log(result)
+        console.log(result)
         return result
       default:
         console.log('other', JSON.stringify(obj))

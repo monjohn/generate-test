@@ -1,7 +1,7 @@
 import { View } from './'
 
 const defaultProps = 
-  { name: 'example' }  
+  { name: 'example', sex: 'Male' }  
 
 
 const newComponent = (props) => shallow(

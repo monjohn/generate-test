@@ -111,8 +111,12 @@ function parseNode(node) {
       return `Array of ${parseNode(node.elementType)}`
     case 'FunctionType':
       return 'function'
+    case 'LiteralType':
+      return node.literal.text
     case 'TupleType':
       return `Tuple of ${parseNodes(node.elementTypes).join(', ')}`
+    case 'UnionType':
+      return ['union', ...parseNodes(node.types)]
     case 'AnyKeyword':
       return 'any'
     case 'BooleanKeyword':
