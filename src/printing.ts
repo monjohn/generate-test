@@ -135,7 +135,7 @@ function print(parsedObjects, fileName = 'placeholder') {
 }
 
 function appendImports(variableNames, tests) {
-  return `import { ${variableNames.join(', ')} } from './'
+  return `import { ${variableNames.join(', ')} } from '.'
   
 ${tests}`
 }
@@ -144,13 +144,12 @@ function printComponent(component, filename) {
   console.log('\n')
 
   return `describe('<${component.name} />', () => {
-  const default${component.name}Props = 
-  ${printDefaultProps(component)}  
-
+  
+    const default${component.name}Props = ${printDefaultProps(component)}  
 
   const newComponent = (props) => shallow(
     <${component.name}
-        {...defaultProps}
+        {...default${component.name}Props}
         {...props}
     />
   )

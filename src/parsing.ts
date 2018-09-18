@@ -51,7 +51,7 @@ function parseArrowFunction(node) {
   return { kind: 'arrowFunction', body }
 }
 
-function parseJsxSelfClosingElement(node) {
+function parseJsxElement(node) {
   return 'JsxElement'
 }
 
@@ -118,12 +118,20 @@ function parseNode(node) {
       return parseVariableStatement(node)
     case 'ArrowFunction':
       return parseArrowFunction(node)
+    case 'Block':
+      // Only looking at last statement in block
+      return parseNode(_.last(node.statements))
+    case 'ReturnStatement':
+      return parseNode(node.expression)
+    case 'JsxElement':
     case 'JsxSelfClosingElement':
-      return parseJsxSelfClosingElement(node)
+      return parseJsxElement(node)
     case 'ClassDeclaration':
       return parseClass(node)
     case 'HeritageClause':
       return parseHeritageClause(node)
+    case 'ParenthesizedExpression':
+      return parseNode(node.expression)
     case 'ExpressionWithTypeArguments':
       return parseExpressionWithTypes(node)
     case 'Expression':
