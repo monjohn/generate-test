@@ -6,7 +6,7 @@ const syntaxKind = populateNames()
 
 function makeSourceFile(sourceCode, filename) {
   filename = filename || __filename
-  return ts.createSourceFile(filename, sourceCode, ts.ScriptTarget.Latest)
+  return ts.createSourceFile('data.tsx', sourceCode, ts.ScriptTarget.Latest)
 }
 
 function populateNames() {
@@ -36,6 +36,7 @@ function parentClass(node) {
 function parseClass(node) {
   return {
     name: getName(node),
+    kind: 'class',
     extends: parentClass(node),
     members: parseNodes(node.members),
   }
@@ -43,6 +44,15 @@ function parseClass(node) {
 
 function parseHeritageClause(node) {
   return parseNode(node.types[0])
+}
+
+function parseArrowFunction(node) {
+  const body = parseNode(node.body)
+  return { kind: 'arrowFunction', body }
+}
+
+function parseJsxSelfClosingElement(node) {
+  return 'JsxElement'
 }
 
 const expressionName = expression => expression.getFullText(tsSourceFile).trim()
@@ -87,8 +97,29 @@ function parsePropertySignature(node) {
 
 const parseMethod = node => getName(node)
 
+function parseVariableDeclaration(node) {
+  return {
+    kind: 'variable',
+    name: getName(node),
+    initializer: parseNode(node.initializer),
+  }
+}
+
+function parseVariableStatement(node) {
+  // TODO: handle more than one declaration
+  return parseNodes(node.declarationList.declarations)[0]
+}
+
 function parseNode(node) {
   switch (nodeKind(node)) {
+    case 'VariableDeclaration':
+      return parseVariableDeclaration(node)
+    case 'VariableStatement':
+      return parseVariableStatement(node)
+    case 'ArrowFunction':
+      return parseArrowFunction(node)
+    case 'JsxSelfClosingElement':
+      return parseJsxSelfClosingElement(node)
     case 'ClassDeclaration':
       return parseClass(node)
     case 'HeritageClause':

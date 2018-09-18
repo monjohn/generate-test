@@ -13,6 +13,8 @@ const sampleData = {
 }
 
 function typeToData(types) {
+  if (typeof types === 'string') return {}
+
   Object.keys(types).forEach(key => {
     const type = types[key]
 
@@ -62,11 +64,15 @@ function resolveTypes(parsedObjects) {
   const javascriptObjects = parsedObjects.filter(o => !Array.isArray(o))
 
   return javascriptObjects.map(object => {
-    let types = object.extends.types
-    types = types.map(t => resolveReference(t, typeMap))
+    let types
+    if (object.kind === 'class') {
+      types = object.extends.types.map(t => resolveReference(t, typeMap))
 
-    object.extends.types = types
-    return object
+      object.extends.types = types
+      return object
+    } else {
+      return object
+    }
   })
 }
 
@@ -84,18 +90,37 @@ const isComponent = classObj =>
 const classType = obj => (isComponent(obj) ? 'component' : 'class')
 
 // PRINT
+// Type information comes in as an array, while javascript information is an object
 function print(parsedObjects, fileName = 'placeholder') {
+  console.log('\n')
   console.log(parsedObjects)
+
   const objectsToPrint = resolveTypes(parsedObjects)
+  const namesToImport = []
 
-  const printed = objectsToPrint.map(obj => {
-    const type = classType(obj)
-
-    switch (type) {
-      case 'component':
-        const result = printComponent(obj, fileName)
-        console.log(result)
+  const tests = objectsToPrint.map(obj => {
+    switch (obj.kind) {
+      case 'class':
+        let result
+        if (classType(obj)) {
+          namesToImport.push(obj.name)
+          result = printComponent(obj, fileName)
+        } else {
+          result = JSON.stringify(obj)
+        }
+        // console.log(result)
         return result
+      case 'variable':
+        if (
+          obj.initializer.kind === 'arrowFunction' &&
+          obj.initializer.body === 'JsxElement'
+        ) {
+          namesToImport.push(obj.name)
+          const variable = printComponent(obj, fileName)
+
+          return variable
+        }
+
       default:
         console.log('other', JSON.stringify(obj))
         const result1 = JSON.stringify(obj)
@@ -103,26 +128,36 @@ function print(parsedObjects, fileName = 'placeholder') {
     }
   })
 
-  return Promise.resolve(printed.join('\n'))
+  const done = appendImports(namesToImport, tests.join('\n'))
+  console.log(done)
+
+  return Promise.resolve(done)
+}
+
+function appendImports(variableNames, tests) {
+  return `import { ${variableNames.join(', ')} } from './'
+  
+${tests}`
 }
 
 function printComponent(component, filename) {
-  return `import { ${component.name} } from './'
+  console.log('\n')
 
-const defaultProps = 
+  return `describe('<${component.name} />', () => {
+  const default${component.name}Props = 
   ${printDefaultProps(component)}  
 
 
-const newComponent = (props) => shallow(
-    <Printing
+  const newComponent = (props) => shallow(
+    <${component.name}
         {...defaultProps}
         {...props}
     />
-)
+  )
 
-const component = newComponent()
-describe('<${component.name} />', () => {
   it('renders', () => {
+    const component = newComponent()
+
     expect(component).toMatchSnapshot()
   })
 })

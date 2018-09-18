@@ -7,7 +7,7 @@ const writeFile = util.promisify(fs.writeFile)
 
 const filePath = process.argv[2]
 
-const makeFilePath = fileName => path.resolve(__dirname, fileName)
+const makeFilePath = fileName => path.resolve(__dirname, '../' + fileName)
 
 function fileContents(file) {
   const filePath = makeFilePath(file)

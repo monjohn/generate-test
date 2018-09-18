@@ -1,6 +1,6 @@
-const parsing = require('./parsing.ts')
-const printing = require('./printing.ts')
-const io = require('./io.ts')
+const parsing = require('./src/parsing.ts')
+const printing = require('./src/printing.ts')
+const io = require('./src/io.ts')
 
 module.exports = () => {
   const args = process.argv.slice(2)
