@@ -4,8 +4,7 @@ const _ = require('lodash')
 let tsSourceFile
 const syntaxKind = populateNames()
 
-function makeSourceFile(sourceCode, filename) {
-  filename = filename || __filename
+function makeSourceFile(sourceCode) {
   return ts.createSourceFile('data.tsx', sourceCode, ts.ScriptTarget.Latest)
 }
 
@@ -47,12 +46,20 @@ function parseHeritageClause(node) {
 }
 
 function parseArrowFunction(node) {
-  const body = parseNode(node.body)
-  return { kind: 'arrowFunction', body }
+  return {
+    kind: 'arrowFunction',
+    body: parseNode(node.body),
+    types: _.fromPairs(parseNodes(node.parameters)),
+  }
 }
 
-function parseJsxElement(node) {
-  return 'JsxElement'
+function parseFunctionDeclaration(node) {
+  return {
+    kind: 'functionDeclaration',
+    name: getName(node),
+    types: _.fromPairs(parseNodes(node.parameters)),
+    body: parseNode(node.body),
+  }
 }
 
 const expressionName = expression => expression.getFullText(tsSourceFile).trim()
@@ -72,6 +79,12 @@ function parseExpressionWithTypes(node) {
     expression['expressionName'] = expressionName(node.expression)
   }
   return expression
+}
+
+function parseParameter(node) {
+  debugNode(node.type)
+  // return parseNode(node.name)
+  return [getName(node), parseNode(node.type)]
 }
 
 function parseTypeAliasDeclaration(node) {
@@ -116,16 +129,17 @@ function parseNode(node) {
       return parseVariableDeclaration(node)
     case 'VariableStatement':
       return parseVariableStatement(node)
+    case 'FunctionDeclaration':
+      return parseFunctionDeclaration(node)
     case 'ArrowFunction':
       return parseArrowFunction(node)
+    case 'Parameter':
+      return parseParameter(node)
     case 'Block':
       // Only looking at last statement in block
       return parseNode(_.last(node.statements))
     case 'ReturnStatement':
       return parseNode(node.expression)
-    case 'JsxElement':
-    case 'JsxSelfClosingElement':
-      return parseJsxElement(node)
     case 'ClassDeclaration':
       return parseClass(node)
     case 'HeritageClause':
@@ -148,6 +162,9 @@ function parseNode(node) {
       return parseTypeReference(node)
     case 'ArrayType':
       return `Array of ${parseNode(node.elementType)}`
+    case 'JsxElement':
+    case 'JsxSelfClosingElement':
+      return 'JsxElement'
     case 'FunctionType':
       return 'function'
     case 'LiteralType':

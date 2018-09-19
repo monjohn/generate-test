@@ -68,7 +68,10 @@ function resolveTypes(parsedObjects) {
     if (object.kind === 'class') {
       types = object.extends.types.map(t => resolveReference(t, typeMap))
 
-      object.extends.types = types
+      object.types = types
+      return object
+    } else if (object.kind === 'variable') {
+      object.types = resolveReference(object.types, typeMap)
       return object
     } else {
       return object
@@ -77,8 +80,10 @@ function resolveTypes(parsedObjects) {
 }
 
 function printDefaultProps(component) {
-  const types = component.extends ? component.extends.types[0] : '{}'
-  const withData = typeToData(types)
+  // const types = component.extends ? component.extends.types[0] : '{}'
+  console.log('comp', component)
+
+  const withData = typeToData(component.types)
 
   return util.inspect(withData)
 }
@@ -116,9 +121,20 @@ function print(parsedObjects, fileName = 'placeholder') {
           obj.initializer.body === 'JsxElement'
         ) {
           namesToImport.push(obj.name)
+
+          obj.types = obj.initializer.types
+
           const variable = printComponent(obj, fileName)
 
           return variable
+        }
+      case 'functionDeclaration':
+        if (obj.body === 'JsxElement') {
+          namesToImport.push(obj.name)
+
+          const func = printComponent(obj, fileName)
+          console.log('other', JSON.stringify(func))
+          return func
         }
 
       default:
