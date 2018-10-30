@@ -10,16 +10,21 @@ const sampleData = {
   string: 'example',
   number: 87,
   boolean: true,
+  function: 'FUNCTION',
 }
 
 function typeToData(types) {
   if (typeof types === 'string') return {}
+  // TODO: cover more than first case
+  if (isArray(types)) return typeToData(types[0])
 
   Object.keys(types).forEach(key => {
     const type = types[key]
 
     if (isArray(type)) {
       types[key] = type[1]
+    } else if (isObject(type[key])) {
+      types[key] = typeToData(types[key])
     } else {
       types[key] = sampleData[type]
     }
@@ -80,12 +85,9 @@ function resolveTypes(parsedObjects) {
 }
 
 function printDefaultProps(component) {
-  // const types = component.extends ? component.extends.types[0] : '{}'
-  console.log('comp', component)
-
   const withData = typeToData(component.types)
 
-  return util.inspect(withData)
+  return util.inspect(withData).replace(/'FUNCTION'/, '() => {}')
 }
 
 const isComponent = classObj =>
@@ -144,14 +146,14 @@ function print(parsedObjects, fileName = 'placeholder') {
     }
   })
 
-  const done = appendImports(namesToImport, tests.join('\n'))
+  const done = appendImports(fileName, namesToImport, tests.join('\n'))
   console.log(done)
 
   return Promise.resolve(done)
 }
 
-function appendImports(variableNames, tests) {
-  return `import { ${variableNames.join(', ')} } from '.'
+function appendImports(filename, variableNames, tests) {
+  return `import { ${variableNames.join(', ')} } from './${filename}'
   
 ${tests}`
 }
@@ -159,7 +161,7 @@ ${tests}`
 function printComponent(component, filename) {
   console.log('\n')
 
-  return `describe('<${component.name} />', () => {
+  return `  describe('<${component.name} />', () => {
   
     const default${component.name}Props = ${printDefaultProps(component)}  
 
