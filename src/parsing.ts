@@ -23,6 +23,7 @@ const nodeKind = node => syntaxKind[node.kind]
 const getName = node => node.name.escapedText
 
 function debugNode(node) {
+  console.log('debugNode')
   console.log(nodeKind(node), node)
 }
 
@@ -49,7 +50,7 @@ function parseArrowFunction(node) {
   return {
     kind: 'arrowFunction',
     body: parseNode(node.body),
-    types: _.fromPairs(parseNodes(node.parameters)),
+    types: parseNode(node.parameters[0].type),
   }
 }
 
@@ -82,9 +83,10 @@ function parseExpressionWithTypes(node) {
 }
 
 function parseParameter(node) {
-  debugNode(node.type)
-  // return parseNode(node.name)
-  return [getName(node), parseNode(node.type)]
+  const name = getName(node)
+  if (name) {
+    return [name, parseNode(node.type)]
+  }
 }
 
 function parseTypeAliasDeclaration(node) {

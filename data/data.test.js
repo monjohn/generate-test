@@ -1,13 +1,12 @@
-import { Screen, VerySpecialButton } from './'
+import { Screen, VerySpecialButton } from './data.tsx'
   
-describe('<Screen />', () => {
-  const defaultScreenProps = 
-  { name: 'example', sex: 'Male' }  
-
+  describe('<Screen />', () => {
+  
+    const defaultScreenProps = { name: 'example', sex: 'Male' }  
 
   const newComponent = (props) => shallow(
     <Screen
-        {...defaultProps}
+        {...defaultScreenProps}
         {...props}
     />
   )
@@ -20,14 +19,13 @@ describe('<Screen />', () => {
 })
 
  
-describe('<VerySpecialButton />', () => {
-  const defaultVerySpecialButtonProps = 
-  {}  
-
+  describe('<VerySpecialButton />', () => {
+  
+    const defaultVerySpecialButtonProps = { onPress: () => {}, title: 'example' }  
 
   const newComponent = (props) => shallow(
     <VerySpecialButton
-        {...defaultProps}
+        {...defaultVerySpecialButtonProps}
         {...props}
     />
   )

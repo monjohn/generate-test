@@ -11,4 +11,9 @@ class Screen extends Component<Props> {
   }
 }
 
-const VerySpecialButton = ({ onPress }: { onPress: () => null }) => <View />
+const VerySpecialButton = ({
+  onPress,
+}: {
+  onPress: () => null
+  title: string
+}) => <View />
