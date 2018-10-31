@@ -47,10 +47,13 @@ function parseHeritageClause(node) {
 }
 
 function parseArrowFunction(node) {
+  const types =
+    !_.isEmpty(node.parameters) &&
+    node.parameters.map(param => parseNode(param.type))
   return {
     kind: 'arrowFunction',
     body: parseNode(node.body),
-    types: parseNode(node.parameters[0].type),
+    types,
   }
 }
 
@@ -191,7 +194,7 @@ function parseNode(node) {
       return 'void'
 
     case 'ImportDeclaration':
-      // return getName(node.importClause)
+    case 'CallExpression':
       return null
     default:
       console.log('\n')

@@ -1,4 +1,5 @@
 const util = require('util')
+const _ = require('lodash')
 
 // Returns if a value is an object
 const isObject = value =>
@@ -8,15 +9,24 @@ const isArray = value => Array.isArray(value)
 
 const sampleData = {
   string: 'example',
-  number: 87,
+  number: Math.floor(Math.random() * 100),
   boolean: true,
   function: 'FUNCTION',
 }
 
 function typeToData(types) {
-  if (typeof types === 'string') return {}
-  // TODO: cover more than first case
-  if (isArray(types)) return typeToData(types[0])
+  if (typeof types === 'string') {
+    return sampleData[types]
+  }
+
+  if (isArray(types)) {
+    const [head, ...rest] = types
+    if (_.isObject(head)) {
+      types = head
+    } else {
+      return types.map(typeToData).join(', ')
+    }
+  }
 
   Object.keys(types).forEach(key => {
     const type = types[key]
@@ -85,7 +95,9 @@ function resolveTypes(parsedObjects) {
 }
 
 function printDefaultProps(component) {
-  const withData = typeToData(component.types)
+  const types = component.types ? component.types : component.initializer.types
+  const withData = typeToData(types)
+  if (_.isString(withData)) return withData
 
   return util.inspect(withData).replace(/'FUNCTION'/, '() => {}')
 }
@@ -99,8 +111,8 @@ const classType = obj => (isComponent(obj) ? 'component' : 'class')
 // PRINT
 // Type information comes in as an array, while javascript information is an object
 function print(parsedObjects, fileName = 'placeholder') {
-  console.log('\n')
-  console.log(parsedObjects)
+  // console.log('\n')
+  // console.log(parsedObjects)
 
   const objectsToPrint = resolveTypes(parsedObjects)
   const namesToImport = []
@@ -118,25 +130,22 @@ function print(parsedObjects, fileName = 'placeholder') {
         // console.log(result)
         return result
       case 'variable':
-        if (
-          obj.initializer.kind === 'arrowFunction' &&
-          obj.initializer.body === 'JsxElement'
-        ) {
-          namesToImport.push(obj.name)
+        if (obj.initializer.kind === 'arrowFunction') {
+          if (obj.initializer.body === 'JsxElement') {
+            namesToImport.push(obj.name)
 
-          obj.types = obj.initializer.types
+            obj.types = obj.initializer.types
 
-          const variable = printComponent(obj, fileName)
-
-          return variable
+            return printComponent(obj, fileName)
+          } else {
+            return printFunction(obj, fileName)
+          }
         }
       case 'functionDeclaration':
         if (obj.body === 'JsxElement') {
           namesToImport.push(obj.name)
 
-          const func = printComponent(obj, fileName)
-          console.log('other', JSON.stringify(func))
-          return func
+          return printComponent(obj, fileName)
         }
 
       default:
@@ -147,7 +156,7 @@ function print(parsedObjects, fileName = 'placeholder') {
   })
 
   const done = appendImports(fileName, namesToImport, tests.join('\n'))
-  console.log(done)
+  // console.log(done)
 
   return Promise.resolve(done)
 }
@@ -159,8 +168,6 @@ ${tests}`
 }
 
 function printComponent(component, filename) {
-  console.log('\n')
-
   return `  describe('<${component.name} />', () => {
   
     const default${component.name}Props = ${printDefaultProps(component)}  
@@ -176,6 +183,18 @@ function printComponent(component, filename) {
     const component = newComponent()
 
     expect(component).toMatchSnapshot()
+  })
+})
+
+ `
+}
+
+function printFunction(func, filename) {
+  return `  describe('${func.name}', () => {
+  it('does the thing', () => {
+    const result = ${func.name}(${printDefaultProps(func)})
+
+    expect(result).toBeTruthy()
   })
 })
 
