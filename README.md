@@ -47,7 +47,7 @@ class Screen extends Component<Props> {
 And it generates a test file like this:
 
 ```TypeScript
-import { Screen } from './data.tsx'
+import { Screen } from './source.tsx'
 
 describe('<Screen />', () => {
 
@@ -89,7 +89,7 @@ export const CoolButton = ({
 This input will give you.
 
 ```TypeScript
-import { CoolButton } from './data.tsx'
+import { CoolButton } from './source.tsx'
 
   describe('<CoolButton />', () => {
 
@@ -121,7 +121,7 @@ const nonReactFunction = (max: number) => {
 You will get this test generated for you.
 
 ```TypeScript
-import { nonReactFunction } from './data.tsx'
+import { nonReactFunction } from './source.tsx'
 
 describe('nonReactFunction', () => {
   it('does the thing', () => {
