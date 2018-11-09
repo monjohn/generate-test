@@ -15,8 +15,11 @@ Perhaps. Does one or more of the following apply to you?
 1. Clone this repository
 2. `cd generate-test`
 3. `npm link`
-4. Find a tsx file (let's pretent its called source.tsx) and run `generate-test source.tsx`
-5. You will find the generated file in the same directory
+
+### Usage
+
+1. Find a tsx file (let's pretent its called source.tsx) and run `generate-test source.tsx`
+2. You will find the generated file in the same directory
 
 ## Examples
 
